@@ -1,0 +1,15 @@
+{
+    "logos": {
+        "favicon":"https://raw.githubusercontent.com/asogelabs/media/main/Services/Logos/Editmu/logo_01_resized_noBG.png"
+    },
+
+    "contact_email":"asogelabs@gmail.com",
+
+    "colorMarca": "#192332",
+    "main_domain": "https://editmu.github.io",
+    "SEO": {
+        "google_search_console_id": "XXXXXXXXXXXXXXXXXXXXXXX"
+    },
+    "android_package":"com.asogelabs.app",
+    "android_appname":"Asoge Labs"
+}
