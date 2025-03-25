@@ -6,8 +6,8 @@ const nextConfig = {
         unoptimized: true, // Se desactiva la optimización de imagen
     },
 
-    //basePath: "/",
-    //output: "export",
+    basePath: "/",
+    output: "export",
     reactStrictMode: true,
 };
 
