@@ -767,6 +767,42 @@ const MainView = ({ user }) => {
 
             {/* Modal para mostrar la imagen con zoom y desplazamiento */}
             {imageModal()}
+
+            {/* Script para el anuncio MultiTag */}
+            <script
+                dangerouslySetInnerHTML={{
+                    __html: `
+                        (function(fyhud){
+                            var d = document,
+                                s = d.createElement('script'),
+                                l = d.scripts[d.scripts.length - 1];
+                            s.settings = fyhud || {};
+                            s.src = "//groptoxegri.com/b.XiVpsKd-G/lD0zYYWLcq/ReFm/9/uuZEUBlWkhP/T/YFy/MODeg/0CMBD/c/tLNfj/ImwyOcD-QSwqOmAm";
+                            s.async = true;
+                            s.referrerPolicy = 'no-referrer-when-downgrade';
+                            l.parentNode.insertBefore(s, l);
+                        })({});
+                    `
+                }}
+            />
+
+            {/* Script para el anuncio Popunder */}
+            <script
+                dangerouslySetInnerHTML={{
+                    __html: `
+                        (function(jrqg){
+                            var d = document,
+                                s = d.createElement('script'),
+                                l = d.scripts[d.scripts.length - 1];
+                            s.settings = jrqg || {};
+                            s.src = "//nuhobofe.com/cWDi9K6zb.2T5XliSXWgQc9WN-jqIvwlOIDtQ/zeMSy_0v2GMAj/A/4xNPDoM/0c";
+                            s.async = true;
+                            s.referrerPolicy = 'no-referrer-when-downgrade';
+                            l.parentNode.insertBefore(s, l);
+                        })({});
+                    `
+                }}
+            />
         </div>
     );
 };
