@@ -119,6 +119,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
+      <head>
+        <meta name="93cf8f7002840987f8e060434021368a06c3b4a1" content="93cf8f7002840987f8e060434021368a06c3b4a1" />
+      </head>
       <body>
         <Navigation />
         <main className="min-h-screen">
