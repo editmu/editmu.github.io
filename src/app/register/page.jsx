@@ -3,7 +3,8 @@ import React from 'react'
 
 import Data from "../constants.json";
 
-import Register from './Components/Main'
+//import Register from './Components/Main'
+import Register2 from "./Components/Main_v2";
 
 
 
@@ -116,7 +117,7 @@ export const metadata = {
 function page() {
     return (
         <React.Fragment>
-            <Register />
+            <Register2 />
         </React.Fragment>
     )
 }

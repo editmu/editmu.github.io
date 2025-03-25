@@ -3,7 +3,8 @@ import React from 'react';
 
 import Data from "../constants.json";
 
-import Login from './Components/Main';
+//import Login from './Components/Main';
+import Login2 from "./Components/Main_v2";
 
 
 
@@ -116,7 +117,7 @@ export const metadata = {
 function page() {
     return (
         <React.Fragment>
-            <Login />
+            <Login2 />
         </React.Fragment>
     )
 };
