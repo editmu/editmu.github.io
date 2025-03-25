@@ -2,6 +2,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { FcGoogle } from 'react-icons/fc';
+import Link from 'next/link';
 
 import Data from "../../constants.json";
 
@@ -116,6 +117,24 @@ export default function Main_v2() {
                             </div>
                         )
                     )}
+
+                    {/* Nota sobre la aceptación de términos */}
+                    <div className="mt-6 text-center text-gray-400 text-xs">
+                        <p>
+                            Al iniciar sesión, estás aceptando nuestra{' '}
+                            <Link href="/legal/privacy-policy" className="text-gray-300 underline">
+                                Política de Privacidad
+                            </Link>
+                            ,{' '}
+                            <Link href="/legal/terms" className="text-gray-300 underline">
+                                Términos de Servicio
+                            </Link>
+                            {' '}y{' '}
+                            <Link href="/legal/cookies-policy" className="text-gray-300 underline">
+                                Política de Cookies
+                            </Link>.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

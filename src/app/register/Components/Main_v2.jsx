@@ -2,6 +2,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { FcGoogle } from 'react-icons/fc';
+import Link from 'next/link';
 
 import Data from "../../constants.json";
 
@@ -117,6 +118,16 @@ export default function Main_v2() {
                         </div>
                     )
                 )}
+
+                {/* Añadir enlaces a las políticas */}
+                <div className="mt-6 text-center text-gray-300 text-xs">
+                    <p>
+                        Al crear una cuenta, estás aceptando nuestra{' '}
+                        <Link href="/legal/privacy-policy" className="underline">Política de Privacidad</Link>,{' '}
+                        <Link href="/legal/terms" className="underline">Términos de Servicio</Link> y{' '}
+                        <Link href="/legal/cookies-policy" className="underline">Política de Cookies</Link>.
+                    </p>
+                </div>
             </div>
         </div>
     );

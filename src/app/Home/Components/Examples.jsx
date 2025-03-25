@@ -1,6 +1,6 @@
 // src/app/Home/Components/Examples.jsx
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 
 
-function Examples() {
+const Examples = forwardRef((props, ref) => {
     const [currentExample, setCurrentExample] = useState(0);
     const [animationStage, setAnimationStage] = useState(0);
     const [typedText, setTypedText] = useState('');
@@ -166,6 +166,13 @@ function Examples() {
         // Cambiar al nuevo ejemplo
         setCurrentExample(index);
     };
+
+    // Exponer el ref al componente padre
+    useImperativeHandle(ref, () => ({
+        scrollIntoView: () => {
+            examplesRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }));
 
     return (
         <div ref={examplesRef} className="py-16 bg-gradient-to-b from-black via-gray-900 to-black text-white overflow-hidden">
@@ -330,8 +337,8 @@ function Examples() {
                             key={index}
                             onClick={() => handleExampleClick(index)}
                             className={`w-3 h-3 rounded-full transition-all duration-300 ease-in-out transform ${currentExample === index
-                                    ? 'bg-gradient-to-r from-blue-400 to-purple-600 scale-125 shadow-md shadow-purple-500/50'
-                                    : 'bg-gray-700 hover:bg-gray-500 hover:scale-110'
+                                ? 'bg-gradient-to-r from-blue-400 to-purple-600 scale-125 shadow-md shadow-purple-500/50'
+                                : 'bg-gray-700 hover:bg-gray-500 hover:scale-110'
                                 }`}
                             aria-label={`Ejemplo ${index + 1}`}
                         ></button>
@@ -340,5 +347,5 @@ function Examples() {
             </div>
         </div>
     );
-};
+});
 export default Examples;

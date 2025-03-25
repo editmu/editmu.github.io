@@ -1,6 +1,6 @@
 // src/app/Home/Overview.jsx
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import supabase from '../lib/supabaseClient';
 
 import Welcome from './Components/Welcome';
@@ -12,6 +12,7 @@ import Why from './Components/Why';
 
 
 function Overview() {
+    const examplesRef = useRef(null);
     const [session, setSession] = useState(null);
 
     useEffect(() => {
@@ -33,8 +34,8 @@ function Overview() {
     return (
         <React.Fragment>
             {/* Componente Welcome que se muestra para todos los usuarios */}
-            <Welcome />
-            <Examples />
+            <Welcome examplesRef={examplesRef} />
+            <Examples ref={examplesRef} />
             <Why />
             
             {/* Contenido adicional para usuarios que han iniciado sesión */}
