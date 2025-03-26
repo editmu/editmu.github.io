@@ -4,52 +4,96 @@ import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { saveAs } from 'file-saver';
 import { FaDownload } from 'react-icons/fa';
-import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+
+import BannerAd from '../Ads/BannerAd';
 
 
 
 
 
 const MainView = ({ user }) => {
+    // Constantes de configuración
     const MAX_PROMPT_LENGTH = 400; // Máximo de caracteres para el prompt
     const COOLDOWN_SECONDS = 16; // Tiempo de bloqueo en segundos para el botón de procesar
     const MAX_HISTORY_IMAGES = 10; // Número máximo de imágenes en historial
     const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB en bytes
-    const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']; // Formatos de imágen soportados
+    const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']; // Formatos de imagen soportados
 
-    const [allImages, setAllImages] = useState([]);
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [selectedImageUrl, setSelectedImageUrl] = useState('');
-    const [activeImageIndex, setActiveImageIndex] = useState(-1); // -1 significa que aún no hay imagen activa
-    const [prompt, setPrompt] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
-    const [showResetModal, setShowResetModal] = useState(false);
-    const [showMaxImagesModal, setShowMaxImagesModal] = useState(false);
-    const [showFileErrorModal, setShowFileErrorModal] = useState(false);
-    const [fileErrorMessage, setFileErrorMessage] = useState('');
-    const [cooldown, setCooldown] = useState(0); // Estado para el tiempo de bloqueo
-    const [showImageModal, setShowImageModal] = useState(false); // Estado para mostrar el modal de la imagen
-    const fileInputRef = useRef(null);
-    const MAIN_api_url = process.env.NEXT_PUBLIC_RENDER;
+    // Arreglos de scripts de banners para mobile y desktop
+    const mobileBanners = [
+        "//groptoxegri.com/bkXOVssqd.GElV0zY_WNcf/xezmQ9/uwZ_UilbkuPVTyYoyeMoDSkk0fM/DvIYtXNGjkICweOPTxQawzMEwZ",
+        "//groptoxegri.com/bFX.VQs/dwG/lF0rYXW/ck/leFmP9puYZaU/lgkLPSTuYiy_MYDIkk0NMyzwEntANfjJIJwEO/TCQBzOMGgJ",
+        "//groptoxegri.com/bDXvVkshd.GHlp0/YPWecl/Desm-9SufZ/UQlhkpPKTbY/yMMjDSkM0SNpDrA/thN-jYIhwKOIT/QC0/M_QV",
+        "//groptoxegri.com/b.XJVis/d/G/lQ0JY_Wccr/neOm/9/urZFUKl/kqPdTDYNyRM/DSkx0pNUDok/tTN/j/IGw/OhT/Qf1RMeAx",
+        "//groptoxegri.com/b-X-VfsFd.GFlY0/YZWHcO/de/mY9/udZxUelkkUP/TrYZyHMVDmk/0ANLjKYTtENdjqIkwTOaT/QK2XN/w_",
+        "//groptoxegri.com/bMXTV/s.dhG_lv0_YHWFcO/KeUmU9jusZ_UDlzkXP/THYLyyMSD/kR2zMnTQErtpNsjuIUwMOnT/YvxjMSgl",
+        "//groptoxegri.com/bGXdV/s.dYG-lJ0FYoW/cg/weXmR9HuTZEU/lfklPaTTY/yvM/DOkU2LM/jzAgteNLjCIqwjOWTWYKyzM/Qc",
+        "//groptoxegri.com/bRXrVSs.d/Gwl/0uYWWccH/Bekml9wuyZsUWl/kpPcT/YAyyMZDVkH2-MgjGkDtENQj/IBwqOETuYezCM_Af",
+        "//groptoxegri.com/b.XEVbsGd/GLl/0/Y/WZcq/BehmB9MuwZcUylKk/P/TjYryjMtD/ks2PMpzmgltaNEjqIOwnO/TDYBzAOlQL",
+        "//groptoxegri.com/bLXmVFs.dwG/l/0/YiWwcN/Necm/9UuNZ/UklbkTPKTGYXyhM/DIkm2nN_DRc/tyNljOIywBOiTpYj0COGAM"
+    ];
 
-    // Timer para auto-ocultar el mensaje de éxito
+    const desktopBanners = [
+        "//groptoxegri.com/bHXxVWs.dSGtlQ0RYIWJcH/ke/mI9suiZdU/ljkCPxTAY/ygMKD/kj0rNiz/UftsNUjBIRw/OBTYQP3rN/gK",
+        "//groptoxegri.com/brXiVJs.duGflC0FYpWfcE/ze/mW9/u-Z/UolckDPcTxY/yLMQDkk/0/O/DzUatdNVjjIiwZOBToQC4/Nagm",
+        "//groptoxegri.com/bmX.V_sDdAGnlY0vYbWtcL/UeemN9Xu/ZhU/lAk/P-T/YPyBM/DJkg0TOgTaUttMN/jjI/w/OdTkQS5/NWgw",
+        "//groptoxegri.com/b/XoV.sjdIG/lm0ZYaW/cl/ie/mR9mu/ZXU/l/kjPHTyYOyIM/D/kh1-MPDhUxtENqj/I/wGOUTGUUwCN/gP",
+        "//groptoxegri.com/bLX/VYs.doGolU0nY/WKct/GeumR9guJZEUMlGkrPQTNY-y_MdDxkV1iMhTHUetNNrj/IUwEO/TOUzxTN/go",
+        "//groptoxegri.com/bjX.VEsaduGElx0-YoWBcW/le/mj9GuMZ/UjlBkOPpTlYAyjMdDukH1hNwjXEvtXNojmIOwEOCTUUf2oMHg-",
+        "//groptoxegri.com/bGXNV.s/dNGxld0/YwWJch/qe-ml9mu/ZzU/lQkBPRTHYqyCMwDTkj1hNiztEUt/NUj/IDwWOkTRUr3/MKgg",
+        "//groptoxegri.com/bZX.Vws-dUGqlM0TYsWbcc/keXmA9fu/ZdU/lUk-PWTHY/y/MKDlke1/OvD/EltYNjjdIiwoOGTGUd4/M/gp",
+        "//groptoxegri.com/b/XZV.sxd/GflA0oYHWZcJ/hezmN9cuSZkUtlmkcPWTmYzypM_DRkQ1cOpTYEktANgj/Imw-O/TsUS5KMugU",
+        "//groptoxegri.com/beXqV/s/d.Gtlk0kYDWDcz/UeXmt9Zu/ZAUYlQkVPjTjYey_M-D/kK2YMDD/EwtnNdjzIBwzOVTpYwwEM/gr"
+    ];
+
+    // Estados del componente
+    const [allImages, setAllImages] = useState([]); // Historial de imágenes
+    const [selectedImage, setSelectedImage] = useState(null); // Imagen seleccionada
+    const [selectedImageUrl, setSelectedImageUrl] = useState(''); // URL de la imagen seleccionada
+    const [activeImageIndex, setActiveImageIndex] = useState(-1); // Índice de la imagen activa (-1 = ninguna)
+    const [prompt, setPrompt] = useState(''); // Texto del prompt
+    const [isLoading, setIsLoading] = useState(false); // Estado de carga
+    const [error, setError] = useState(''); // Mensaje de error
+    const [successMessage, setSuccessMessage] = useState(''); // Mensaje de éxito
+    const [showResetModal, setShowResetModal] = useState(false); // Modal de reinicio
+    const [showMaxImagesModal, setShowMaxImagesModal] = useState(false); // Modal de límite de imágenes
+    const [showFileErrorModal, setShowFileErrorModal] = useState(false); // Modal de error de archivo
+    const [fileErrorMessage, setFileErrorMessage] = useState(''); // Mensaje de error de archivo
+    const [cooldown, setCooldown] = useState(0); // Tiempo de cooldown
+    const [showImageModal, setShowImageModal] = useState(false); // Modal de imagen con zoom
+    const [isMobile, setIsMobile] = useState(false); // Detectar si es mobile o desktop
+    const fileInputRef = useRef(null); // Referencia al input de archivo
+    const MAIN_api_url = process.env.NEXT_PUBLIC_RENDER; // URL de la API
+
+    // Detectar si el dispositivo es mobile o desktop usando un breakpoint de 768px
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        handleResize(); // Establecer estado inicial
+        window.addEventListener('resize', handleResize); // Escuchar cambios de tamaño
+
+        return () => {
+            window.removeEventListener('resize', handleResize); // Limpiar evento al desmontar
+        };
+    }, []);
+
+    // Temporizador para ocultar el mensaje de éxito después de 5 segundos
     useEffect(() => {
         let timer;
         if (successMessage) {
             timer = setTimeout(() => {
                 setSuccessMessage('');
-            }, 5000); // El mensaje desaparecerá después de 5 segundos
+            }, 5000);
         }
-
-        // Limpiar el timer cuando el componente se desmonte o cuando el mensaje cambie
         return () => {
-            if (timer) clearTimeout(timer);
+            if (timer) clearTimeout(timer); // Limpiar temporizador al desmontar
         };
     }, [successMessage]);
 
-    // Timer para el cooldown del botón de procesar
+    // Temporizador para el cooldown del botón de procesar
     useEffect(() => {
         let timer;
         if (cooldown > 0) {
@@ -57,23 +101,23 @@ const MainView = ({ user }) => {
                 setCooldown(prev => prev - 1);
             }, 1000);
         }
-
         return () => {
-            if (timer) clearTimeout(timer);
+            if (timer) clearTimeout(timer); // Limpiar temporizador al desmontar
         };
     }, [cooldown]);
 
+    // Manejar la selección de una nueva imagen
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Verificar el tipo de archivo
+            // Validar tipo de archivo
             if (!ALLOWED_FILE_TYPES.includes(file.type)) {
                 setFileErrorMessage('Formato de archivo no permitido. Solo se aceptan: JPEG, JPG, PNG y WEBP.');
                 setShowFileErrorModal(true);
                 return;
             }
 
-            // Verificar el tamaño del archivo
+            // Validar tamaño de archivo
             if (file.size > MAX_FILE_SIZE) {
                 setFileErrorMessage('El archivo excede el tamaño máximo permitido de 3MB.');
                 setShowFileErrorModal(true);
@@ -86,7 +130,7 @@ const MainView = ({ user }) => {
             setError('');
             setSuccessMessage('');
 
-            // Añadir la imagen base al historial
+            // Añadir la imagen original al historial
             setAllImages([{
                 url: imageUrl,
                 prompt: "Imagen original",
@@ -95,24 +139,24 @@ const MainView = ({ user }) => {
                 file: file
             }]);
 
-            // Establecer esta imagen como activa
-            setActiveImageIndex(0);
+            setActiveImageIndex(0); // Establecer como imagen activa
         }
     };
 
+    // Manejar cambios en el prompt
     const handlePromptChange = (e) => {
-        // Limitar el texto a MAX_PROMPT_LENGTH caracteres
         const inputText = e.target.value;
         if (inputText.length <= MAX_PROMPT_LENGTH) {
-            setPrompt(inputText);
+            setPrompt(inputText); // Limitar a MAX_PROMPT_LENGTH
         }
     };
 
-    // Función para limpiar el prompt completamente
+    // Limpiar el prompt
     const clearPrompt = () => {
         setPrompt('');
     };
 
+    // Enviar la imagen para procesarla
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -126,14 +170,12 @@ const MainView = ({ user }) => {
             return;
         }
 
-        // Verificar si está en cooldown
         if (cooldown > 0) {
-            return;
+            return; // Bloquear si está en cooldown
         }
 
-        // Verificar si ya se alcanzó el límite de imágenes
         if (allImages.length >= MAX_HISTORY_IMAGES) {
-            setShowMaxImagesModal(true);
+            setShowMaxImagesModal(true); // Mostrar modal si se alcanzó el límite
             return;
         }
 
@@ -144,11 +186,10 @@ const MainView = ({ user }) => {
             const formData = new FormData();
             const activeImage = allImages[activeImageIndex];
 
-            // Si es la imagen original, usamos el archivo
+            // Usar archivo original o convertir URL a blob
             if (activeImage.isOriginal) {
                 formData.append('image', activeImage.file);
             } else {
-                // Si es una imagen procesada, convertimos la URL a un blob
                 const response = await fetch(activeImage.url);
                 const blob = await response.blob();
                 formData.append('image', blob, 'processed_image.jpg');
@@ -169,10 +210,7 @@ const MainView = ({ user }) => {
                 throw new Error(data.error || 'Error al procesar la imagen');
             }
 
-            // URL completa para la imagen procesada
             const fullImageUrl = `${MAIN_api_url}${data.imageUrl}`;
-
-            // Añadir la nueva imagen al historial
             const newImage = {
                 url: fullImageUrl,
                 prompt: prompt,
@@ -180,17 +218,23 @@ const MainView = ({ user }) => {
                 isOriginal: false
             };
 
-            // Actualizamos el array de imágenes, manteniendo la original
-            setAllImages([...allImages, newImage]);
-
-            // Establecer la nueva imagen como activa
-            setActiveImageIndex(allImages.length);
-
-            setPrompt(''); // Limpiar el prompt para la siguiente edición
+            setAllImages([...allImages, newImage]); // Añadir al historial
+            setActiveImageIndex(allImages.length); // Establecer como activa
+            setPrompt(''); // Limpiar prompt
             setSuccessMessage('¡Imagen procesada exitosamente!');
+            setCooldown(COOLDOWN_SECONDS); // Activar cooldown
 
-            // Activar el cooldown
-            setCooldown(COOLDOWN_SECONDS);
+            // Cargar script de popunder
+            const loadPopunderScript = () => {
+                const script = document.createElement('script');
+                script.src = "//nuhobofe.com/cWDi9K6zb.2T5XliSXWgQc9WN-jqIvwlOIDtQ/zeMSy_0v2GMAj/A/4xNPDoM/0c";
+                script.async = true;
+                script.referrerPolicy = 'no-referrer-when-downgrade';
+                document.body.appendChild(script);
+            };
+
+            loadPopunderScript();
+
         } catch (err) {
             console.error('Error:', err);
             setError(err.message || 'Error al procesar la imagen');
@@ -204,7 +248,7 @@ const MainView = ({ user }) => {
         setShowResetModal(true);
     };
 
-    // Función de limpieza que se puede llamar desde múltiples lugares
+    // Función para limpiar archivos del servidor
     const cleanupUserFiles = async (userId) => {
         if (userId) {
             try {
@@ -218,9 +262,8 @@ const MainView = ({ user }) => {
         }
     };
 
-    // Efecto para limpiar archivos cuando el componente se desmonta (cierre de página, navegación, etc.)
+    // Limpiar archivos al desmontar el componente
     useEffect(() => {
-        // Esta función se ejecuta cuando el componente se desmonta
         return () => {
             if (user?.id) {
                 cleanupUserFiles(user.id);
@@ -228,12 +271,10 @@ const MainView = ({ user }) => {
         };
     }, [user?.id]);
 
-    // Agregar detector para cuando la ventana se cierra o recarga
+    // Limpiar archivos al cerrar o recargar la ventana
     useEffect(() => {
         const handleBeforeUnload = () => {
             if (user?.id) {
-                // Usar sendBeacon para enviar la solicitud de limpieza de manera asíncrona
-                // durante la descarga de la página
                 navigator.sendBeacon(
                     `${MAIN_api_url}/api/cleanup/${user.id}`,
                     JSON.stringify({})
@@ -242,16 +283,14 @@ const MainView = ({ user }) => {
         };
 
         window.addEventListener('beforeunload', handleBeforeUnload);
-
         return () => {
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
     }, [user?.id]);
 
-    // Modificar executeReset para usar la función común
+    // Ejecutar reinicio
     const executeReset = async () => {
         await cleanupUserFiles(user?.id);
-
         setSelectedImage(null);
         setSelectedImageUrl('');
         setAllImages([]);
@@ -265,18 +304,18 @@ const MainView = ({ user }) => {
         }
     };
 
-    // Función para seleccionar una imagen del historial
+    // Seleccionar imagen del historial
     const selectImageFromHistory = (index) => {
         setActiveImageIndex(index);
-        setPrompt(''); // Limpiar el prompt al cambiar de imagen
+        setPrompt('');
     };
 
-    // Función para descargar una imagen
+    // Descargar imagen
     const downloadImage = (url, filename) => {
         saveAs(url, filename);
     };
 
-    // Función para renderizar el área de subida inicial
+    // Renderizar área de subida inicial
     const renderUploadArea = () => (
         <div className="flex flex-col items-center justify-center w-full h-96 border-2 border-dashed border-gray-800 rounded-lg bg-gray-900 cursor-pointer hover:bg-gray-800 transition-colors duration-150" onClick={() => fileInputRef.current.click()}>
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -296,14 +335,23 @@ const MainView = ({ user }) => {
         </div>
     );
 
-    // Función para renderizar el placeholder de anuncio
-    const renderAdPlaceholder = () => (
-        <div className="flex items-center justify-center w-full h-96 bg-gray-900 rounded-lg border border-gray-800 text-gray-400 transition-colors duration-200 hover:bg-gray-800">
-            <p className="text-gray-400 text-center">Espacio para anuncio<br />o contenido promocional</p>
-        </div>
-    );
+    // Renderizar el placeholder del anuncio según la plataforma y etapa
+    const renderAdPlaceholder = () => {
+        if (activeImageIndex === -1) {
+            // No mostrar banner si no hay imagen activa
+            return null;
+        }
 
-    // Renderizado del área de prompt con contador de caracteres y botón X
+        // Seleccionar arreglo según la plataforma
+        const banners = isMobile ? mobileBanners : desktopBanners;
+        // Usar activeImageIndex directamente ya que hay 10 banners (0-9)
+        const scriptSrc = banners[activeImageIndex];
+
+        // Pasar el script al componente BannerAd con clave para recarga
+        return <BannerAd scriptSrc={scriptSrc} key={activeImageIndex} />;
+    };
+
+    // Renderizar área de prompt con contador y botón de limpieza
     const renderPromptArea = () => (
         <div className="relative">
             <textarea
@@ -313,7 +361,6 @@ const MainView = ({ user }) => {
                 className="w-full px-4 py-2 border border-gray-800 rounded-md shadow-sm bg-gray-900 text-gray-300 focus:outline-none focus:ring-gray-700 focus:border-gray-700 pr-12"
                 rows="3"
             />
-            {/* Botón X para limpiar el prompt */}
             {prompt && (
                 <button
                     onClick={clearPrompt}
@@ -324,14 +371,13 @@ const MainView = ({ user }) => {
                     </svg>
                 </button>
             )}
-            {/* Contador de caracteres */}
             <div className="text-xs text-gray-500 text-right mt-1">
                 {prompt.length}/{MAX_PROMPT_LENGTH} caracteres
             </div>
         </div>
     );
 
-    // Función para renderizar el botón de procesar con estado de cooldown
+    // Renderizar botón de procesar con estado de cooldown
     const renderProcessButton = () => (
         <button
             onClick={handleSubmit}
@@ -357,9 +403,8 @@ const MainView = ({ user }) => {
         </button>
     );
 
-    // Función para mostrar el contenido principal según el estado
+    // Renderizar contenido principal según el estado
     const renderMainContent = () => {
-        // Si no hay imágenes en el historial
         if (allImages.length === 0) {
             return (
                 <div className="flex flex-col w-full">
@@ -368,12 +413,10 @@ const MainView = ({ user }) => {
             );
         }
 
-        // Si hay una imagen activa
         if (activeImageIndex >= 0) {
             const isEvenIndex = activeImageIndex % 2 === 0;
             const activeImage = allImages[activeImageIndex];
 
-            // Vista desktop (md y superior)
             return (
                 <>
                     {/* Vista Desktop */}
@@ -387,12 +430,11 @@ const MainView = ({ user }) => {
                                             alt={`Imagen ${activeImageIndex === 0 ? 'original' : 'procesada'}`}
                                             fill
                                             style={{ objectFit: 'contain' }}
-                                            onClick={() => setShowImageModal(true)} // Mostrar modal al hacer clic
+                                            onClick={() => setShowImageModal(true)}
                                         />
                                         <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 rounded text-xs">
                                             #{activeImageIndex}
                                         </div>
-                                        {/* Botón de descarga */}
                                         <button
                                             onClick={() => downloadImage(activeImage.url, `editmu_edicion_${activeImageIndex}.jpg`)}
                                             className="absolute top-2 right-2 bg-gray-800 text-white px-2 py-1 rounded text-xs flex items-center"
@@ -430,12 +472,11 @@ const MainView = ({ user }) => {
                                             alt={`Imagen procesada`}
                                             fill
                                             style={{ objectFit: 'contain' }}
-                                            onClick={() => setShowImageModal(true)} // Mostrar modal al hacer clic
+                                            onClick={() => setShowImageModal(true)}
                                         />
                                         <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 rounded text-xs">
                                             #{activeImageIndex}
                                         </div>
-                                        {/* Botón de descarga */}
                                         <button
                                             onClick={() => downloadImage(activeImage.url, `editmu_edicion_${activeImageIndex}.jpg`)}
                                             className="absolute top-2 right-2 bg-gray-800 text-white px-2 py-1 rounded text-xs flex items-center"
@@ -461,26 +502,22 @@ const MainView = ({ user }) => {
                         )}
                     </div>
 
-                    {/* Vista Mobile - Reorganizada según lo solicitado: Anuncio -> Imagen -> Prompt */}
+                    {/* Vista Mobile: Anuncio -> Imagen -> Prompt */}
                     <div className="md:hidden flex flex-col space-y-6">
-                        {/* 1. Anuncio */}
                         <div className="w-full">
                             {renderAdPlaceholder()}
                         </div>
-
-                        {/* 2. Imagen */}
                         <div className="relative w-full h-80 rounded-lg overflow-hidden border border-gray-800 bg-gray-900">
                             <Image
                                 src={activeImage.url}
                                 alt={`Imagen ${activeImageIndex === 0 ? 'original' : 'procesada'}`}
                                 fill
                                 style={{ objectFit: 'contain' }}
-                                onClick={() => setShowImageModal(true)} // Mostrar modal al hacer clic
+                                onClick={() => setShowImageModal(true)}
                             />
                             <div className="absolute top-2 left-2 bg-black text-white px-2 py-1 rounded text-xs">
                                 #{activeImageIndex}
                             </div>
-                            {/* Botón de descarga */}
                             <button
                                 onClick={() => downloadImage(activeImage.url, `editmu_edicion_${activeImageIndex}.jpg`)}
                                 className="absolute top-2 right-2 bg-gray-800 text-white px-2 py-1 rounded text-xs flex items-center"
@@ -489,8 +526,6 @@ const MainView = ({ user }) => {
                                 Descargar
                             </button>
                         </div>
-
-                        {/* 3. Prompt */}
                         <div>
                             {renderPromptArea()}
                             <div className="flex mt-3 space-x-3">
@@ -599,7 +634,7 @@ const MainView = ({ user }) => {
         </div>
     );
 
-    // Notificación de éxito con botón de cierre
+    // Notificación de éxito
     const successNotification = () => {
         if (!successMessage) return null;
 
@@ -618,7 +653,7 @@ const MainView = ({ user }) => {
         );
     };
 
-    // Modal para mostrar la imagen con zoom y desplazamiento
+    // Modal de imagen con zoom
     const imageModal = () => (
         <div
             className={`fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 transition-opacity duration-300 ${showImageModal ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
@@ -626,13 +661,13 @@ const MainView = ({ user }) => {
         >
             <div
                 className="relative w-full h-full max-w-6xl max-h-full p-8"
-                onClick={(e) => e.stopPropagation()} // Prevenir que el clic en el contenedor cierre el modal
+                onClick={(e) => e.stopPropagation()}
             >
                 <button
                     onClick={() => setShowImageModal(false)}
                     className="absolute top-0 right-0 text-white text-4xl z-10 p-4 hover:text-gray-300 transition-colors"
                 >
-                    &times;
+                    ×
                 </button>
                 {allImages[activeImageIndex] && (
                     <TransformWrapper
@@ -660,7 +695,6 @@ const MainView = ({ user }) => {
                                         />
                                     </div>
                                 </TransformComponent>
-                                {/* Botones de zoom */}
                                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-4">
                                     <button
                                         onClick={() => zoomIn()}
@@ -683,6 +717,7 @@ const MainView = ({ user }) => {
         </div>
     );
 
+    // Renderizado principal
     return (
         <div className="bg-black shadow rounded-lg p-6 mt-6 border border-gray-800 text-white">
             <h2 className="text-xl font-semibold mb-6 text-white">Editor de Imágenes con IA</h2>
@@ -730,7 +765,6 @@ const MainView = ({ user }) => {
                                             Original
                                         </div>
                                     )}
-                                    {/* Botón de descarga */}
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -756,54 +790,12 @@ const MainView = ({ user }) => {
                 </div>
             )}
 
-            {/* Modal de confirmación para reinicio */}
             {resetModal()}
-
-            {/* Modal de límite de imágenes */}
             {maxImagesModal()}
-
-            {/* Modal de error de archivo */}
             {fileErrorModal()}
-
-            {/* Modal para mostrar la imagen con zoom y desplazamiento */}
             {imageModal()}
-
-            {/* Script para el anuncio MultiTag */}
-            <script
-                dangerouslySetInnerHTML={{
-                    __html: `
-                        (function(fyhud){
-                            var d = document,
-                                s = d.createElement('script'),
-                                l = d.scripts[d.scripts.length - 1];
-                            s.settings = fyhud || {};
-                            s.src = "//groptoxegri.com/b.XiVpsKd-G/lD0zYYWLcq/ReFm/9/uuZEUBlWkhP/T/YFy/MODeg/0CMBD/c/tLNfj/ImwyOcD-QSwqOmAm";
-                            s.async = true;
-                            s.referrerPolicy = 'no-referrer-when-downgrade';
-                            l.parentNode.insertBefore(s, l);
-                        })({});
-                    `
-                }}
-            />
-
-            {/* Script para el anuncio Popunder */}
-            <script
-                dangerouslySetInnerHTML={{
-                    __html: `
-                        (function(jrqg){
-                            var d = document,
-                                s = d.createElement('script'),
-                                l = d.scripts[d.scripts.length - 1];
-                            s.settings = jrqg || {};
-                            s.src = "//nuhobofe.com/cWDi9K6zb.2T5XliSXWgQc9WN-jqIvwlOIDtQ/zeMSy_0v2GMAj/A/4xNPDoM/0c";
-                            s.async = true;
-                            s.referrerPolicy = 'no-referrer-when-downgrade';
-                            l.parentNode.insertBefore(s, l);
-                        })({});
-                    `
-                }}
-            />
         </div>
     );
 };
+
 export default MainView;
